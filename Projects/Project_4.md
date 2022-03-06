@@ -3,7 +3,7 @@
 ## Abstract
 In this paper I compare different combinations of regression models and gradient boosting models, and asses their performance on the Concrete Compressive Strength dataset provided by USCI. I use a home-made repetitive gradient boosting algorithm on different combinations of Random Forest, Loess, and Decision Tree regressors. Here, I omit Neural Networks since their regression performance tends to be poor, and they are resource intensive.
 
-I also investiagate and apply LightGBM, Microsoft's resource-light gradient boosting machine. In the end, LightGBM out-performs my home-made algorithm with an average MSE of 108 versus my home made's 148.
+I also investiagate and apply LightGBM, Microsoft's resource-light gradient boosting machine. In the end, LightGBM out-performs my home-made algorithm with an average MSE of 108 versus my home made's 148, but only when the entire dataset is used (80% train, 20% test). Otherwise, during KFold validations, the best model was Loess withh three repeated RandomForest boosters. I believe this difference in performance has to do with LightGBM's overfitting problem on small datasets. The entire concrete compressive strength dataset has just 1048 observations, so splitting it during KFold makes it much too small for LightGBM.
 
 ## Methods
 In this paper I designed a home made gradient boosting algorithm that could mix and match Decision Trees, Random Forests, and Loess regressors. The Loess regressor was also homemade. below is the code for the function,
@@ -64,13 +64,13 @@ This function is able to use Loess, Random Forests, or Decision trees as both 'w
 ## LightGBM
 LightGBM is a powerful gradient boosting algorithm that uses decision tree boosters. The thing that makes LightGBM different is that it grows its trees by each leaf, rather than by each level.  This means that for each decision tree, the only leaf that gets to split into the next level is the on with the highest loss. This is great for using fewer resources on large datasets, and for processing speed, however it can lead to overfitting on small datasets. This change is why LightGBM has 'light' in its name, as it used much less memory than other competitive algorithms and gives results quickly.
 ## Performance Conclusion
-Here, I used KFold validation with 10 splits, and only tried one random state to try out. This validation loop took much longer than others that I've used, it took well over an hour to train and I had to use my desktop GPU acceleration. Below si my validation loop:
+Here, I used KFold validation with 10 splits, and only tried one random state to try out. This validation loop took much longer than others that I've used, it took well over an hour to train and I had to use my desktop GPU acceleration. Below is my validation loop:
 
 ```
 scale = StandardScaler()
 for i in range(12345,12346):
   print('Random State: ' + str(i))
-  kf = KFold(n_splits=10,shuffle=True,random_state=i)
+  kf = KFold(n_splits=3,shuffle=True,random_state=i)
   # this is the random state cross-validation loop to make sure our results are real, not just the state being good/bad for a particular model
   j = 0
   for idxtrain, idxtest in kf.split(data[:,:2]):
@@ -110,8 +110,8 @@ for i in range(12345,12346):
                    kern = Tricubic, tau = 1.2, tau_b=0.5, intercept = True, n_estimators=100 , max_depth=3)
 
     #LightGBM
-    lgb = lgbm.LGBMRegressor(num_iterations=200)
-    lgb.fit(xtrain, ytrain, eval_set=[(xtest, ytest)], eval_metric='mse')
+    lgb = lgbm.LGBMRegressor(num_iterations=1000)
+    lgb.fit(xtrain, ytrain, eval_set=[(xtest, ytest)], eval_metric='mse', early_stopping_rounds=100)
     yhat_lgbm = lgb.predict(xtest, num_iteration=lgb.best_iteration_)
 
 
@@ -123,3 +123,16 @@ for i in range(12345,12346):
     mse_lgbm.append(mse(ytest,yhat_lgbm))
 ```
 
+After running this validation loop, my results were:
+
+>The Cross-validated Mean Squared Error for LWR with Decision Tree is : 145.20
+
+>The Cross-validated Mean Squared Error for LWR with Random Forest is : 143.51
+
+>The Cross-validated Mean Squared Error for Random Forest with Decision Tree is : 197.18
+
+>The Cross-validated Mean Squared Error for LWR with LWR : 219.29
+
+>The Cross-validated Mean Squared Error for LightGBM : 182.67
+
+Surprisingly, LightGBM did not take the top spot. Instead Loess boosted by three repetitive Random Forests was the best performer with an average MSE of 143.51, while LightGBM ended with an average of 182.67. I believe this is because the dataset is small enough (1048 entries) that when it was split for training and testing, and further during KFold validation, it became much too small for LightGBM, which has an overfitting probe=lem for small datasets.
