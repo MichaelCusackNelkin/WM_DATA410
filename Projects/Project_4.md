@@ -137,6 +137,6 @@ Surprisingly, LightGBM did not take the top spot. Instead Loess boosted by three
 
 <figure>
 <center>
-<img src='Data/Proj4_MSEs.png' width='1600px' />
+<img src='Data/Proj4_Plot.png' width='1600px' />
 <figcaption>MSE Score per K Fold for Concrete Compressive Strength<figcaption></center>
 </figure>
