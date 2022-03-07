@@ -63,14 +63,20 @@ def n_boost(X, y, xtest, model, nboost, booster, kern = None, tau = None, tau_b 
 This function is able to use Loess, Random Forests, or Decision trees as both 'weak learners' and as gradient boosters. It works by a series of conditionals to figure out what the user would like to do, then training a weak learner and using a for loop to train a number of boosting algorithms for as many iterations as are input by the user.
 ## LightGBM
 LightGBM is a powerful gradient boosting algorithm that uses decision tree boosters. The thing that makes LightGBM different is that it grows its trees by each leaf, rather than by each level.  This means that for each decision tree, the only leaf that gets to split into the next level is the on with the highest loss. This is great for using fewer resources on large datasets, and for processing speed, however it can lead to overfitting on small datasets. This change is why LightGBM has 'light' in its name, as it used much less memory than other competitive algorithms and gives results quickly.
+
+LightGBM's implementation is also strikingly simple:
+```
+lgb = lgbm.LGBMRegressor(num_iterations=1000)
+    lgb.fit(xtrain, ytrain, eval_set=[(xtest, ytest)], eval_metric='mse', early_stopping_rounds=100)
+    yhat_lgbm = lgb.predict(xtest, num_iteration=lgb.best_iteration_)
+```
 ## Performance Conclusion
 Here, I used KFold validation with 10 splits, and only tried one random state to try out. This validation loop took much longer than others that I've used, it took well over an hour to train and I had to use my desktop GPU acceleration. Below is my validation loop:
 
 ```
-scale = StandardScaler()
-for i in range(12345,12346):
+for i in range(123115,123117):
   print('Random State: ' + str(i))
-  kf = KFold(n_splits=3,shuffle=True,random_state=i)
+  kf = KFold(n_splits=5,shuffle=True,random_state=i)
   # this is the random state cross-validation loop to make sure our results are real, not just the state being good/bad for a particular model
   j = 0
   for idxtrain, idxtest in kf.split(data[:,:2]):
@@ -113,26 +119,24 @@ for i in range(12345,12346):
     lgb = lgbm.LGBMRegressor(num_iterations=1000)
     lgb.fit(xtrain, ytrain, eval_set=[(xtest, ytest)], eval_metric='mse', early_stopping_rounds=100)
     yhat_lgbm = lgb.predict(xtest, num_iteration=lgb.best_iteration_)
-
-
-    #Append each model's MSE
-    mse_lwr_lwr.append(mse(ytest,yhat_lwr_lwr))
-    mse_lwr_d.append(mse(ytest,yhat_lwr_d))
-    mse_lwr_rf.append(mse(ytest,yhat_lwr_rf))
-    mse_rf_d.append(mse(ytest,yhat_rf_d))
-    mse_lgbm.append(mse(ytest,yhat_lgbm))
 ```
 
 After running this validation loop, my results were:
 
->The Cross-validated Mean Squared Error for LWR with Decision Tree is : 145.20
+The Cross-validated Mean Squared Error for LWR with Decision Tree is : 143.012
 
->The Cross-validated Mean Squared Error for LWR with Random Forest is : 143.51
+>The Cross-validated Mean Squared Error for LWR with Random Forest is : 140.36
 
->The Cross-validated Mean Squared Error for Random Forest with Decision Tree is : 197.18
+>The Cross-validated Mean Squared Error for Random Forest with Decision Tree is : 181.19
 
->The Cross-validated Mean Squared Error for LWR with LWR : 219.29
+>The Cross-validated Mean Squared Error for LWR with LWR : 199.80
 
->The Cross-validated Mean Squared Error for LightGBM : 182.67
+>The Cross-validated Mean Squared Error for LightGBM : 142.94
 
 Surprisingly, LightGBM did not take the top spot. Instead Loess boosted by three repetitive Random Forests was the best performer with an average MSE of 143.51, while LightGBM ended with an average of 182.67. I believe this is because the dataset is small enough (1048 entries) that when it was split for training and testing, and further during KFold validation, it became much too small for LightGBM, which has an overfitting probe=lem for small datasets.
+
+<figure>
+<center>
+<img src='Data/Proj4_MSEs.png' width='1000px' />
+<figcaption>MSE Score per K Fold<figcaption></center>
+</figure>
