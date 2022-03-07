@@ -135,6 +135,8 @@ The Cross-validated Mean Squared Error for LWR with Decision Tree is : 143.012
 
 Surprisingly, LightGBM did not take the top spot. Instead Loess boosted by three repetitive Random Forests was the best performer with an average MSE of 143.51, while LightGBM ended with an average of 182.67. I believe this is because the dataset is small enough (1048 entries) that when it was split for training and testing, and further during KFold validation, it became much too small for LightGBM, which has an overfitting probelem for small datasets.
 
+It seems that the best combinations had Loess regressors, with either Random Forest or Decision tree boosters. The random forest regressor didn't work well even with a decision tree booster, and the loess/loess pair failed as well. To continue this work, more random states and more data would be the first thing needed, but also more regressors could be tried. I could include Neural netowrks, possibly as boosters, and try more combinations with longer run times.
+
 <figure>
 <center>
 <img src='Data/Proj4_Plot.png' width='1600px' />
