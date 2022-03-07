@@ -133,7 +133,7 @@ The Cross-validated Mean Squared Error for LWR with Decision Tree is : 143.012
 
 >The Cross-validated Mean Squared Error for LightGBM : 142.94
 
-Surprisingly, LightGBM did not take the top spot. Instead Loess boosted by three repetitive Random Forests was the best performer with an average MSE of 143.51, while LightGBM ended with an average of 182.67. I believe this is because the dataset is small enough (1048 entries) that when it was split for training and testing, and further during KFold validation, it became much too small for LightGBM, which has an overfitting probe=lem for small datasets.
+Surprisingly, LightGBM did not take the top spot. Instead Loess boosted by three repetitive Random Forests was the best performer with an average MSE of 143.51, while LightGBM ended with an average of 182.67. I believe this is because the dataset is small enough (1048 entries) that when it was split for training and testing, and further during KFold validation, it became much too small for LightGBM, which has an overfitting probelem for small datasets.
 
 <figure>
 <center>
