@@ -3,7 +3,7 @@
 ## Abstract
 In this paper I compare different combinations of regression models and gradient boosting models, and asses their performance on the Concrete Compressive Strength dataset provided by USCI. I use a home-made repetitive gradient boosting algorithm on different combinations of Random Forest, Loess, and Decision Tree regressors. Here, I omit Neural Networks since their regression performance tends to be poor, and they are resource intensive.
 
-I also investiagate and apply LightGBM, Microsoft's resource-light gradient boosting machine. In the end, LightGBM out-performs my home-made algorithm with an average MSE of 108 versus my home made's 148, but only when the entire dataset is used (80% train, 20% test). Otherwise, during KFold validations, the best model was Loess withh three repeated RandomForest boosters. I believe this difference in performance has to do with LightGBM's overfitting problem on small datasets. The entire concrete compressive strength dataset has just 1048 observations, so splitting it during KFold makes it much too small for LightGBM.
+I also investiagate and apply LightGBM, Microsoft's resource-light gradient boosting machine. In the end, LightGBM out-performs my home-made algorithm with an average MSE of 108 versus my home made's 148, but only when the entire dataset is used (80% train, 20% test). Otherwise, during KFold validations, the best model was Loess with three repeated RandomForest boosters. I believe this difference in performance has to do with LightGBM's overfitting problem on small datasets. The entire concrete compressive strength dataset has just 1048 observations, so splitting it during KFold makes it much too small for LightGBM.
 
 ## Methods
 In this paper I designed a home made gradient boosting algorithm that could mix and match Decision Trees, Random Forests, and Loess regressors. The Loess regressor was also homemade. below is the code for the function,
@@ -60,7 +60,7 @@ def n_boost(X, y, xtest, model, nboost, booster, kern = None, tau = None, tau_b 
         rf_error = y - yhat_rf
       return yhat_test
 ```
-This function is able to use Loess, Random Forests, or Decision trees as both 'weak learners' and as gradient boosters. It works by a series of conditionals to figure out what the user would like to do, then training a weak learner and using a for loop to train a number of boosting algorithms for as many iterations as are input by the user.
+This function is able to use Loess, Random Forests, or Decision trees both as 'weak learners' and as gradient boosters. It works via series of conditionals that figure out what the user would like to do, and then by training a weak learner and using it for a loop to train a number of boosting algorithms for as many iterations as are input by the user.
 ## LightGBM
 LightGBM is a powerful gradient boosting algorithm that uses decision tree boosters. The thing that makes LightGBM different is that it grows its trees by each leaf, rather than by each level.  This means that for each decision tree, the only leaf that gets to split into the next level is the on with the highest loss. This is great for using fewer resources on large datasets, and for processing speed, however it can lead to overfitting on small datasets. This change is why LightGBM has 'light' in its name, as it used much less memory than other competitive algorithms and gives results quickly.
 
@@ -137,6 +137,6 @@ Surprisingly, LightGBM did not take the top spot. Instead Loess boosted by three
 
 <figure>
 <center>
-<img src='Data/Proj4_MSEs.png' width='1000px' />
-<figcaption>MSE Score per K Fold<figcaption></center>
+<img src='Data/Proj4_MSEs.png' width='1600px' />
+<figcaption>MSE Score per K Fold for Concrete Compressive Strength<figcaption></center>
 </figure>
