@@ -38,7 +38,7 @@ I used the SKLearn compliant functions that we designed in class for both SCAD a
 		def predict(self, x):
 			return x.dot(self.coef_)
 ### Part Two: Generating Random Data
-I made the data using the given formula and order of ground truth $\beta^*$. I generated 100 datasets, each one normally pulling from a 200 x 1200 Toeplitz matrix where the correlations between features i and j were $c = 0.8^{|i - j|}$. There were only 27 non-zero weights in teh ground truth $\beta^*$. The code I used to generate the data is shown below.
+I made the data using the given formula and order of ground truth (beta_star). I generated 100 datasets, each one normally pulling from a 200 x 1200 Toeplitz matrix where the correlations between features i and j were 0.8^{|i - j|. There were only 27 non-zero weights in teh ground truth beta_star. The code I used to generate the data is shown below.
 
     # The desired mean values of the sample.
     n = 200
