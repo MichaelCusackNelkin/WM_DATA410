@@ -1,7 +1,42 @@
 ﻿## Project 5: Regularization and Variable Selection with Ridge, Lasso, Elastic Net, Square Root Lasso, and SCAD.
 
 ### Part One: Sklearn Compliant SCAD and SQRTLasso
-I used the SKLearn compliant functions that we designed in class for both SCAD and SQRTLasso's definitions.
+I used the SKLearn compliant functions that we designed in class for both SCAD and SQRTLasso's definitions. These were well functioning classes and work with SKLearn, but the SQRT Lasso in particular is very slow. My Code is below:
+
+	class SQRTLasso:
+		def __init__(self, alpha=0.01):
+			self.alpha = alpha
+		
+		def fit(self, x, y):
+			alpha=self.alpha
+			def f_obj(x,y,beta,alpha):
+			n =len(x)
+			beta = beta.flatten()
+			beta = beta.reshape(-1,1)
+			output = np.sqrt(1/n*np.sum((y-x.dot(beta))**2)) + alpha*np.sum(np.abs(beta))
+			return output
+			
+			def f_grad(x,y,beta,alpha):
+			n=x.shape[0]
+			p=x.shape[1]
+			beta = beta.flatten()
+			beta = beta.reshape(-1,1)
+			output = np.array((-1/np.sqrt(n))*np.transpose(x).dot(y-x.dot(beta))/np.sqrt(np.sum((y-x.dot(beta))**2))+alpha*np.sign(beta)).flatten()
+			return output
+			
+			def objective(beta):
+			return(f_obj(x,y,beta,alpha))
+
+			def gradient(beta):
+			return(f_grad(x,y,beta,alpha))
+			
+			beta0 = np.ones((x.shape[1],1))
+			output = minimize(objective, beta0, method='L-BFGS-B', jac=gradient,options={'gtol': 1e-8, 'maxiter': 50000,'maxls': 25,'disp': True})
+			beta = output.x
+			self.coef_ = beta
+			
+		def predict(self, x):
+			return x.dot(self.coef_)
 ### Part Two: Generating Random Data
 I made the data using the given formula and order of ground truth $\beta^*$. I generated 100 datasets, each one normally pulling from a 200 x 1200 Toeplitz matrix where the correlations between features i and j were $c = 0.8^{|i - j|}$. There were only 27 non-zero weights in teh ground truth $\beta^*$. The code I used to generate the data is shown below.
 
