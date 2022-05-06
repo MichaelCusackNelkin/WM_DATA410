@@ -104,6 +104,8 @@ optimizer=keras.optimizers.Adam(), metrics=["accuracy"])
 <p>Here the KFold validation loop I ran on my two best models.</p>
 <pre><code>	accs_0 = []
 	accs_4 = []
+	path_0 = "/content/drive/MyDrive/DATA410_Final_Project/Tuned_Models/Tuned_model_0.h5"
+	path_4 = "/content/drive/MyDrive/DATA410_Final_Project/Tuned_Models/Tuned_model_4.h5"
 	#this is the random state cross-validation loop to make sure our results are real
 	for i in  range(12345,12356):
 		print('Random State: ' + str(i))
@@ -116,16 +118,16 @@ optimizer=keras.optimizers.Adam(), metrics=["accuracy"])
 			xtest = (kfold_data[0][idxtest],kfold_data[1][idxtest])
 			
 			#Model 0
-			model_0=tf.keras.models.load_model("/content/drive/MyDrive/DATA410_Final_Project/Tuned_Models/Tuned_model_0.h5")
+			model_0=tf.keras.models.load_model(path_0)
 			model_0.fit(xtrain, ytrain,
-						validation_split=0.2, epochs=25, verbose=0)
+				    validation_split=0.2, epochs=25, verbose=0)
 			#test the model and get the test accuracy
 			_, acc_0 = model_0.evaluate(xtest, ytest, verbose=0)
 			
 			#Model 4
-			model_4=tf.keras.models.load_model("/content/drive/MyDrive/DATA410_Final_Project/Tuned_Models/Tuned_model_4.h5")
+			model_4=tf.keras.models.load_model(path_4)
 			model_4.fit(xtrain, ytrain,
-						validation_split=0.2, epochs=25, verbose=0)
+				    validation_split=0.2, epochs=25, verbose=0)
 			#test the model and get the test accuracy
 			_, acc_4 = model_4.evaluate(xtest, ytest, verbose=0)
 			
