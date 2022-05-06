@@ -83,7 +83,12 @@ In order to train, test, and validate my models, I saved them adn wrote a few he
 		probs_4= model_4.predict(test_data, batch_size=BATCH_SIZE)
 		Plot_Heatmaps(probs_0,probs_4)
 
-### Insert heatmaps
+<figure>
+<center>
+<img  src='Data/tuned_vs_untuned.png'  width='1600px'  />
+<figcaption>Confusion Matrix of a tuned model vs an untuned model<figcaption></center>
+</figure>
+	
  In this case, model_4 performed *very* well. However, it's performance did worry me about the potential that it could be over fitting to the imbalanced data, and only paying attention to the "light" class. So next I did some Kfold validation!
  
  ### Stratified KFold Validation
