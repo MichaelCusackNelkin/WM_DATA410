@@ -96,7 +96,7 @@ optimizer=keras.optimizers.Adam(), metrics=["accuracy"])
 </code></pre>
 <figure>
 <center>
-<img src="Data/tuned_vs_untuned.png" width="1600px">
+<img src="Projects/Data/tuned_vs_untuned.png" width="1600px">
 <figcaption>Confusion Matrix of a tuned model vs an untuned model<figcaption></figcaption></figcaption></center>
 </figure>
 <p>In this case, model_4 performed <em>very</em> well. However, it’s performance did worry me about the potential that it could be over fitting to the imbalanced data, and only paying attention to the “light” class. So next I did some Kfold validation!</p>
@@ -136,7 +136,7 @@ optimizer=keras.optimizers.Adam(), metrics=["accuracy"])
 <p>The abov loop stratifies the full dataset into five train and test folds, making sure each fold as teh same proportion of each class. It then trains each model on the train fold, tests it on the test fold, and appends the test accuracies to pre-initialized lists. Then we repeat this process 10 times for 10 different random states. Ideally, this validation would happen with lots and lots of data, and would be run for as many random states as it takes to convince the user. Below I show a histogram of the accuracies from of these validation loops.</p>
 <figure>
 <center>
-<img src="Data/0_vs_4.png" width="1600px">
+<img src="Projects/Data/0_vs_4.png" width="1600px">
 <figcaption>55 KFold Accuracies for model_0 and model_4<figcaption></figcaption></figcaption></center>
 </figure>
 After seeing the histogram of accuracies I am more confident that model_4 really is a fantastic model! It reliably reaches extremely high accuracies.
