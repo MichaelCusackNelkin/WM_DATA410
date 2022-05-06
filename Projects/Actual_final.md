@@ -126,7 +126,12 @@ In order to train, test, and validate my models, I saved them adn wrote a few he
 				accs_4.append(acc_4)
 The abov loop stratifies the full dataset into five train and test folds, making sure each fold as teh same proportion of each class. It then trains each model on the train fold, tests it on the test fold, and appends the test accuracies to pre-initialized lists. Then we repeat this process 10 times for 10 different random states. Ideally, this validation would happen with lots and lots of data, and would be run for as many random states as it takes to convince the user. Below I show a histogram of the accuracies from of these validation loops.
 
-### histogram of accuracies
+
+<figure>
+<center>
+<img  src='Data/0_vs_4.png'  width='1600px'  />
+<figcaption>55 KFold Accuracies for model_0 and model_4<figcaption></center>
+</figure>
 After seeing the histogram of accuracies I am more confident that model_4 really is a fantastic model! It reliably reaches extremely high accuracies.
 
 ## Discussion and Inferences
