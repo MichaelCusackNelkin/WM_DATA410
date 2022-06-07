@@ -96,7 +96,7 @@ optimizer=keras.optimizers.Adam(), metrics=["accuracy"])
 </code></pre>
 <figure>
 <center>
-<img src="Data/tuned_vs_untuned.png" width="1800px">
+<img src="./Data/tuned_vs_untuned.png" width="1800px">
 <figcaption>Confusion Matrix of a tuned model vs an untuned model<figcaption></figcaption></figcaption></center>
 </figure>
 <p>In this case, model_4 performed <em>very</em> well. However, it’s performance did worry me about the potential that it could be over fitting to the imbalanced data, and only paying attention to the “light” class. So next I did some Kfold validation!</p>
