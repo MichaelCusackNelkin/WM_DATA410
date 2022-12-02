@@ -22,7 +22,7 @@
 <p>As this dataset is 63MB of video data (254 videos), I used Google Colab Pro GPUs to accelerate the training stage. Without this, none of the below methods would’ve run in any useful amount of time.</p>
 <h2 id="description-of-all-the-methods-applied">Description of All the Methods Applied</h2>
 <h3 id="preprocessing-methods">Preprocessing Methods</h3>
-<p>This data comes quite clean. There are the 254 videos in <em>.AVI</em> format, and there is tab-separated <em>info.txt</em> file containing video names, class labels, and metadata such as the date and weather conditions. However, there is a serious class imbalance problem in this dataset. Of the 254 videos 165, or 65%, are light traffic. The other 35% is split evenly between medium and heavy traffic. This puts a lot of emphasis on the my kfold validation later int he code, and makes it important to use stratification in all my train-test splits.</p>
+<p>This data comes quite clean. There are the 254 videos in <em>.AVI</em> format, and there is tab-separated <em>info.txt</em> file containing video names, class labels, and metadata such as the date and weather conditions. However, there is a serious class imbalance problem in this dataset. Of the 254 videos 165, or 65%, are light traffic. The other 35% is split evenly between medium and heavy traffic. This heavy weighting towards light traffic makes it very important to use a stratified kfold validation later on meaning that validation train/test sets are evenly weighted between each class.</p>
 <p>First I used a stratified train-test-split method to split the data into 80% train, and 20% test. Making sure to stratify the data was important because it ensured that the train and test sets contained the same proportions of classes.</p>
 <p>The only preprocessing that I did was use a feature extractor to help the models train more effectively. In this case, I used the open-source InceptionV3 feature extractor, which is a convolutional neural network takes each frame of each video and “masks” it with what it believes to be important features. The model outputs the masks for each frame, each mask containing 2048 features for the frame.</p>
 <h3 id="machine-learning-methods">Machine Learning Methods</h3>
@@ -32,7 +32,6 @@
 <pre><code>class_vocab = label_processor.get_vocabulary()
 frame_features_input = keras.Input((MAX_SEQ_LENGTH, NUM_FEATURES))
 mask_input = keras.Input((MAX_SEQ_LENGTH,), dtype="bool")
-
 x = keras.layers.GRU(units=hp.Int(name='GRU_1', min_value=12, max_value=24,
 					 step=2),return_sequences=True)(frame_features_input,mask=mask_input)
 x = keras.layers.GRU(units=hp.Int(name='GRU_2', min_value=2,
@@ -42,14 +41,14 @@ x = keras.layers.Dropout(rate=hp.Float(name='dropout_rate',
 						 min_value=0.2,max_value=0.4, step=0.1))(x)
 x = keras.layers.Dense(units=hp.Int(name='dense_1', 
 					  min_value=4, max_value=12, step=2),activation="relu")(x)
-					  
+#Outputs and compiling the model 
 output = keras.layers.Dense(len(class_vocab), activation="softmax")(x)
 rnn_model = keras.Model([frame_features_input, mask_input], output)
 rnn_model.compile(loss="sparse_categorical_crossentropy",
 optimizer=keras.optimizers.Adam(), metrics=["accuracy"])
 </code></pre>
-<p>This model is comprised of an input layer, two GRU layers, a dropout layer, dense layer, and output dense layer. Everywhere there is an <code>hp</code> means I am calling the Hyperband tuner to tune that parameter in the min and max range given. For example, <code>Dropout(rate=hp.Float(name='dropout_rate', 							 min_value=0.2,max_value=0.4, step=0.1))</code> will tune the rate parameter in the dropout layer on floats between 0.2 and 0.4, in steps of 0.1 .</p>
-<p>I ended up making six hypertuned models, and found them to be somewhat inconsistent. In the end, my fourth hypertuned model performed the best in this configuration:</p>
+<p>This model is comprised of an input layer, two GRU layers, a dropout layer, dense layer, and output dense layer. Everywhere there is an <code>hp</code> means I am calling the Hyperband tuner to tune that parameter in the min and max range given. For example, <code>Dropout(rate=hp.Float(name='dropout_rate', 							 min_value=0.2,max_value=0.4, step=0.1))</code> will tune the rate parameter in the dropout layer with floats between 0.2 and 0.4, in steps of 0.1 .</p>
+<p>I ended up making six hypertuned models, and found them to be somewhat inconsistent. In the end, the best hypertuned model had this configuration:</p>
 
 <table>
 <thead>
@@ -77,8 +76,8 @@ optimizer=keras.optimizers.Adam(), metrics=["accuracy"])
 </tr>
 </tbody>
 </table><h3 id="training-evaluation-and-comparison">Training, Evaluation, and Comparison</h3>
-<p>In order to train, test, and validate my models, I saved them adn wrote a few helper functions. Here is an example of loading my best models and testing them.</p>
-<pre><code>	#Rebuild tuned_model_4 its weights and the optimizer
+<p>In order to train, test, and validate my models, I saved them and wrote a few helper functions. Here is an example of loading my best models and testing them.</p>
+<pre><code>	#Rebuild tuned_model_4, its weights and the optimizer
 	model_4=tf.keras.models.load_model("/content/drive/MyDrive/DATA410_Final_Project/Tuned_Models/Tuned_model_4.h5")
 	model_0=tf.keras.models.load_model("/content/drive/MyDrive/DATA410_Final_Project/Tuned_Models/Tuned_model_0.h5")
 	
@@ -99,9 +98,10 @@ optimizer=keras.optimizers.Adam(), metrics=["accuracy"])
 <img src="./Data/tuned_vs_untuned.png" width="1800px">
 <figcaption>Confusion Matrix of a tuned model vs an untuned model<figcaption></figcaption></figcaption></center>
 </figure>
-<p>In this case, model_4 performed <em>very</em> well. However, it’s performance did worry me about the potential that it could be over fitting to the imbalanced data, and only paying attention to the “light” class. So next I did some Kfold validation!</p>
+<p>In this case, model_4 performed <em>very</em> well. However, it’s performance did worry me about the potential that it could be over fitting to the imbalanced data, and only paying attention to the “light” class. So next I did some kfold validation!</p>
+
 <h3 id="stratified-kfold-validation">Stratified KFold Validation</h3>
-<p>Here the KFold validation loop I ran on my two best models.</p>
+<p>In order to validate my models across all the data I ran a stratified kfold validation. I designed the validation loop myself, using the full dataset, but making sure to isolate the test set.  Here is the loop I ran on my two best models.</p>
 <pre><code>	accs_0 = []
 	accs_4 = []
 	path_0 = "/content/drive/MyDrive/DATA410_Final_Project/Tuned_Models/Tuned_model_0.h5"
@@ -136,15 +136,15 @@ optimizer=keras.optimizers.Adam(), metrics=["accuracy"])
 			accs_0.append(acc_0)
 			accs_4.append(acc_4)
 </code></pre>
-<p>The above loop stratifies the full dataset into five train and test folds, making sure each fold as teh same proportion of each class. It then trains each model on the train fold, tests it on the test fold, and appends the test accuracies to pre-initialized lists. Then we repeat this process 10 times for 10 different random states. Ideally, this validation would happen with lots and lots of data, and would be run for as many random states as it takes to convince the user. Below I show a histogram of the accuracies from of these validation loops.</p>
+<p>The above loop stratifies the full dataset into five train and test folds, making sure each fold as the same proportion of each class. It then trains each model on the train fold, tests it on the test fold, and appends the test accuracies to pre-initialized lists. Then we repeat this process 10 times for each of 10 different random states. Ideally, this validation would happen with much more data, and would be run for as many random states as possible. Below I show a histogram of the accuracies from these validation loops.</p>
 <figure>
 <center>
 <img src="Data/0_vs_4.png" width="1800px">
 <figcaption>55 KFold Accuracies for model_0 and model_4<figcaption></figcaption></figcaption></center>
 </figure>
-After seeing the histogram of accuracies I am more confident that model_4 really is a fantastic model! It reliably reaches extremely high accuracies.
+After seeing the histogram of accuracies I am more confident that model_4 really does have a good grasp of the data! It reliably reaches relatively high accuracies, given the limited nature of the data.
 <h2 id="discussion-and-inferences">Discussion and Inferences</h2>
-<p>As this paper was supposed to be a test case for a future audio-video classifier, I am very happy with these results. I never thought that I would be able to converge on such great video-classification algorithm so quickly. Next steps for this project are to start introducing audio classifcation in parallel, so that a future version would be able to identify a truck that is actively idling, not just wether a truck is in the frame or not. Of course, this model could go much further with more data, and I am excited to collect more data for the idling truck identifier!</p>
+<p>As this paper was supposed to be a test case for a future audio-video classifier, I am very happy with these results. I never thought that I would be able to converge on such great video-classification algorithm so quickly. Next steps for this project are to start introducing audio classification in parallel, so that a future version would be able to identify a truck that is actively idling, not just whether a truck is in the frame or not. Of course, this model could go much further with more data, and so another important step is to collect real-world audio-video data of idling trucks!</p>
 <h2 id="references">References</h2>
 <ol>
 <li>Video Classification with a CNN-RNN Architecture by <a href="https://twitter.com/RisingSayak">Sayak Paul</a> <a href="https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/video_classification.ipynb#scrollTo=7-4EPFk5-n_J">https://colab.research.google.com/github/keras-team/keras-io/blob/master/examples/vision/ipynb/video_classification.ipynb#scrollTo=7-4EPFk5-n_J</a></li>
