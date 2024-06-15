@@ -11,7 +11,7 @@
 <body class="stackedit">
   <div class="stackedit__html"><h2 id="project-5-regularization-and-variable-selection-with-ridge-lasso-elastic-net-square-root-lasso-and-scad.">Project 5: Regularization and Variable Selection with Ridge, Lasso, Elastic Net, Square Root Lasso, and SCAD.</h2>
 <h3 id="part-one-sklearn-compliant-scad-and-sqrtlasso">Part One: Sklearn Compliant SCAD and SQRTLasso</h3>
-<p>I used the SKLearn compliant functions that we designed in class for both SCAD and SQRTLasso’s definitions. These were well functioning classes and work with SKLearn, but the SQRT Lasso in particular is very slow. My Code is below:</p>
+<p>I used the SKLearn compliant functions that we designed in class for both SCAD and SQRTLasso’s definitions. These were well functioning classes and work with SKLearn, but the SQRT Lasso in particular is very slow. SQRTLasso code below:</p>
 <pre><code>class SQRTLasso:
 	def __init__(self, alpha=0.01):
 		self.alpha = alpha
@@ -48,7 +48,7 @@
 		return x.dot(self.coef_)
 </code></pre>
 <h3 id="part-two-generating-random-data">Part Two: Generating Random Data</h3>
-<p>I made the data using the given formula and order of ground truth (beta_star). I generated 100 datasets, each one normally pulling from a 200 x 1200 Toeplitz matrix where the correlations between features i and j were 0.8^{|i - j|. There were only 27 non-zero weights in teh ground truth beta_star. The code I used to generate the data is shown below.</p>
+<p>I made the data using the given formula and order of ground truth (beta_star). I generated 100 datasets, each one normally pulling from a 200 x 1200 Toeplitz matrix where the correlations between features i and j were 0.8^{|i - j|. There were only 27 non-zero weights in the ground truth beta_star. The code I used to generate the data is shown below.</p>
 <pre><code># The desired mean values of the sample.
 n = 200
 p= 1200
@@ -74,10 +74,10 @@ Xdata.append(X)
 ydata.append(y)
 </code></pre>
 <h3 id="part-three-evaluation">Part Three: Evaluation</h3>
-<p>To evaluate these  models, I graphed the L2 distance, MSE, and correctly identified non-zero weights, for each model over all 100 datasets. Then I also found there averages.</p>
+<p>To evaluate these  models, I graphed the L2 distance and MSE, and correctly identified non-zero weights for each model over all 100 datasets, as well as their averages.</p>
 <p>Before doing this however, I used GridSearchCV to tune the major hyperparameters for each type of model. I did this on only one dataset because it took too long to run for all 100 and for each of the models. However, this did provide some major improvements.</p>
-<p>I also used a validation funciton to find do KFold validation for each model on all 100 datasets and find the mean squared error on each dataset. Again because of hardware constraints, I had to set <span class="katex--inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">k=2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.69444em; vertical-align: 0em;"></span><span class="mord mathnormal" style="margin-right: 0.03148em;">k</span><span class="mspace" style="margin-right: 0.277778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right: 0.277778em;"></span></span><span class="base"><span class="strut" style="height: 0.64444em; vertical-align: 0em;"></span><span class="mord">2</span></span></span></span></span> for the kfold validation. Normally I would set it higher, but this took much too much time to run.</p>
-<p>The code I used to do for grid search, graphing, and validation for Elastic Net is below:</p>
+<p>I also used a validation funciton to find do KFold validation for each model on all 100 datasets and find the mean squared error on each. Again because of hardware constraints, I had to set <span class="katex--inline"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">k=2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height: 0.69444em; vertical-align: 0em;"></span><span class="mord mathnormal" style="margin-right: 0.03148em;">k</span><span class="mspace" style="margin-right: 0.277778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right: 0.277778em;"></span></span><span class="base"><span class="strut" style="height: 0.64444em; vertical-align: 0em;"></span><span class="mord">2</span></span></span></span></span> for the kfold validation. Normally I would set it higher, but this took much too long to run.</p>
+<p>The code I used to for grid search, graphing, and validation for Elastic Net is below:</p>
 <pre><code>grid = GridSearchCV(estimator=ElasticNet(fit_intercept=False, max_iter=10000), cv=10, scoring='neg_mean_squared_error',
 				    param_grid={'alpha':np.linspace(0,1,50),'l1_ratio':np.linspace(0,1,num=50)})
 gs_results = grid.fit(Xdata[0],ydata[0])
@@ -114,14 +114,16 @@ for i in range(0,100):
 	print('Mean L2 ' + str(np.mean(L2s)))
 	print('Mean MSE ' + str(np.mean(MSEs)))
 </code></pre>
-<p>In the end, I wasn’t able to get meaningful results for all 100 datasets for  SQRTLasso. Unfortunately, this homemade function would not run in time for my hardware to complete.</p>
+<p>In the end, I wasn't able to get meaningful results for all 100 datasets for SQRTLasso. Unfortunately, this homemade function would not run in time for my hardware to complete.</p>
 <p>For the other models however, I got promising results.</p>
 <ul>
-<li>Elasticnet:
+<li>Elastic Net:
 <ul>
 <li>Mean correct non-zeros 24.79</li>
 <li>Mean L2 2.751559123799759</li>
 <li>Mean MSE 23.742791628966092</li>
+<p><img src="https://michaelcusacknelkin.github.io/WM_DATA410/Projects/Data/ElasticNet.png" alt="Graphs for ElasticNet">
+</p>
 </ul>
 </li>
 <li>Lasso
@@ -129,6 +131,7 @@ for i in range(0,100):
 <li>Mean correct non-zeros 20.39</li>
 <li>Mean L2 3.5852023017970707</li>
 <li>Mean MSE 23.698891039902524</li>
+<p><img src="https://michaelcusacknelkin.github.io/WM_DATA410/Projects/Data/Lasso.png" alt="Graphs for Lasso"></p>
 </ul>
 </li>
 <li>Ridge
@@ -136,6 +139,7 @@ for i in range(0,100):
 <li>Mean correct non-zeros 27.0</li>
 <li>Mean L2 3.167209794939203</li>
 <li>Mean MSE 52.92163236150477</li>
+<p><img src="https://michaelcusacknelkin.github.io/WM_DATA410/Projects/Data/Ridge.png" alt="Graphs for Ridge"></p>
 </ul>
 </li>
 <li>SCAD
@@ -143,15 +147,11 @@ for i in range(0,100):
 <li>Mean correct non-zeros 27.0</li>
 <li>Mean L2 3.4014219138641537</li>
 <li>Mean MSE 75.63356371150178</li>
+<p><img src="https://michaelcusacknelkin.github.io/WM_DATA410/Projects/Data/SCAD.png" alt="Graphs for SCAD"></p>
 </ul>
 </li>
 </ul>
-<p>And the graphs for each are here, in the same order:</p>
-<p><img src="https://michaelcusacknelkin.github.io/Adv_Applied_Machine_Learning/Projects/Data/ElasticNet.png" alt="Graphs for ElasticNet"></p>
-<p><img src="https://michaelcusacknelkin.github.io/Adv_Applied_Machine_Learning/Projects/Data/Lasso.png" alt="Graphs for Lasso"></p>
-<p><img src="https://michaelcusacknelkin.github.io/Adv_Applied_Machine_Learning/Projects/Data/Ridge.png" alt="Graphs for Ridge"></p>
-<p><img src="https://michaelcusacknelkin.github.io/Adv_Applied_Machine_Learning/Projects/Data/SCAD.png" alt="Graphs for SCAD"></p>
-<p>As we can see, Ridge and SCAD were able to identify all 27 non-zero weights in all datasets, but had higher MSE than the other models. It seems that the lowest L2 model was ElasticNet, at 2.75, while the others were each around 3.5. This seems to indicate that different model types are better at different aspects of the validation.</p>
+<p>As we can see, Ridge and SCAD were able to identify all 27 non-zero weights in all datasets, but had higher MSE than the other models. It seems that the lowest L2 was ElasticNet, at 2.75, while the others were each around 3.5. This seems to indicate that different model varieties perform differently across validation techniques.</p>
 </div>
 </body>
 
