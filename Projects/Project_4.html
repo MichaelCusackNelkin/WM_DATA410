@@ -11,8 +11,8 @@
 <body class="stackedit">
   <div class="stackedit__html"><h1 id="project-4-multiple-boosting-algorithms-and-light-gradient-boosting-machines-lightgbm">Project 4: Multiple Boosting Algorithms and Light Gradient Boosting Machines (LightGBM)</h1>
 <h2 id="abstract">Abstract</h2>
-<p>In this paper I compare different combinations of regression models and gradient boosting models, and asses their performance on the Concrete Compressive Strength dataset provided by USCI. I use a home-made repetitive gradient boosting algorithm on different combinations of Random Forest, Loess, and Decision Tree regressors. Here, I omit Neural Networks since their regression performance tends to be poor, and they are resource intensive.</p>
-<p>I also investiagate and apply LightGBM, Microsoft’s resource-light gradient boosting machine. In the end, LightGBM out-performs my home-made algorithm with an average MSE of 108 versus my home made’s 148, but only when the entire dataset is used (80% train, 20% test). Otherwise, during KFold validations, the best model was Loess with three repeated RandomForest boosters. I believe this difference in performance has to do with LightGBM’s overfitting problem on small datasets. The entire concrete compressive strength dataset has just 1048 observations, so splitting it during KFold makes it much too small for LightGBM.</p>
+<p>In this paper I compare different combinations of regression models and gradient boosting methods, and asses their performance fitting multivariate linear regressions on the <a href="https://github.com/MichaelCusackNelkin/WM_DATA410/blob/main/Projects/Data/Concrete_Data.csv">Compressive Compressive Strength</a> dataset provided by USCI. The full source code is linked <a href="https://github.com/MichaelCusackNelkin/WM_DATA410/blob/main/Projects/Notebooks/Project_4.ipynb">here</a> I use a home-made repetitive gradient boosting algorithm on different combinations of Random Forest, Loess, and Decision Tree regressors. Here, I omit Neural Networks since their regression performance tends to be poor, and they are resource intensive.</p>
+<p>I also investiagate and apply LightGBM, Microsoft's resource-light gradient boosting machine. In the end, LightGBM out-performs my home-made algorithm with an average MSE of 108 versus my home made's 148, but only when the entire dataset is used (80% train, 20% test). Otherwise, during KFold validations, the best model was Loess with three repeated RandomForest boosters. I believe this difference in performance has to do with LightGBM's overfitting problem on small datasets. The entire concrete compressive strength dataset has just 1030 observations, so splitting it during KFold makes it much too small for LightGBM.</p>
 <h2 id="methods">Methods</h2>
 <p>In this paper I designed a home made gradient boosting algorithm that could mix and match Decision Trees, Random Forests, and Loess regressors. The Loess regressor was also homemade. below is the code for the function,</p>
 <pre><code>def n_boost(X, y, xtest, model, nboost, booster, kern = None, tau = None, tau_b = None, 
@@ -66,16 +66,16 @@
         rf_error = y - yhat_rf
       return yhat_test
 </code></pre>
-<p>This function is able to use Loess, Random Forests, or Decision trees both as ‘weak learners’ and as gradient boosters. It works via series of conditionals that figure out what the user would like to do, and then by training a weak learner and using it for a loop to train a number of boosting algorithms for as many iterations as are input by the user.</p>
+<p>This function is able to use Loess, Random Forests, or Decision trees both as ‘weak learners' and as gradient boosters. It works via series of conditionals that figure out what the user would like to do, and then by training a weak learner and using it for a loop to train a number of boosting algorithms for as many iterations as are input by the user.</p>
 <h2 id="lightgbm">LightGBM</h2>
-<p>LightGBM is a powerful gradient boosting algorithm that uses decision tree boosters. The thing that makes LightGBM different is that it grows its trees by each leaf, rather than by each level.  This means that for each decision tree, the only leaf that gets to split into the next level is the on with the highest loss. This is great for using fewer resources on large datasets, and for processing speed, however it can lead to overfitting on small datasets. This change is why LightGBM has ‘light’ in its name, as it used much less memory than other competitive algorithms and gives results quickly.</p>
-<p>LightGBM’s implementation is also strikingly simple:</p>
+<p>LightGBM is a powerful gradient boosting algorithm that uses decision tree boosters. The thing that makes LightGBM different is that it grows its trees by each leaf, rather than by each level.  This means that for each decision tree, the only leaf that gets to split into the next level is the on with the highest loss. This is great for using fewer resources on large datasets, and for processing speed, however it can lead to overfitting on small datasets. This change is why LightGBM has ‘light' in its name, as it used much less memory than other competitive algorithms and gives results quickly.</p>
+<p>LightGBM's implementation is also strikingly simple:</p>
 <pre><code>lgb = lgbm.LGBMRegressor(num_iterations=1000)
     lgb.fit(xtrain, ytrain, eval_set=[(xtest, ytest)], eval_metric='mse', early_stopping_rounds=100)
     yhat_lgbm = lgb.predict(xtest, num_iteration=lgb.best_iteration_)
 </code></pre>
 <h2 id="performance-conclusion">Performance Conclusion</h2>
-<p>Here, I used KFold validation with 10 splits, and only tried one random state to try out. This validation loop took much longer than others that I’ve used, it took well over an hour to train and I had to use my desktop GPU acceleration. Below is my validation loop:</p>
+<p>Here, I used KFold validation with 10 splits, and only tried one random state to try out. This validation loop took much longer than others that I've used, it took well over an hour to train and I had to use my desktop GPU acceleration. Below is my validation loop:</p>
 <pre><code>for i in range(123115,123117):
   print('Random State: ' + str(i))
   kf = KFold(n_splits=5,shuffle=True,random_state=i)
@@ -122,23 +122,23 @@
     lgb.fit(xtrain, ytrain, eval_set=[(xtest, ytest)], eval_metric='mse', early_stopping_rounds=100)
     yhat_lgbm = lgb.predict(xtest, num_iteration=lgb.best_iteration_)
 </code></pre>
+
 <p>After running this validation loop, my results were:</p>
-<p>The Cross-validated Mean Squared Error for LWR with Decision Tree is : 143.012</p>
-<blockquote>
-<p>The Cross-validated Mean Squared Error for LWR with Random Forest is : 140.36</p>
-</blockquote>
-<blockquote>
-<p>The Cross-validated Mean Squared Error for Random Forest with Decision Tree is : 181.19</p>
-</blockquote>
-<blockquote>
-<p>The Cross-validated Mean Squared Error for LWR with LWR : 199.80</p>
-</blockquote>
-<blockquote>
-<p>The Cross-validated Mean Squared Error for LightGBM : 142.94</p>
-</blockquote>
-<p>Surprisingly, LightGBM did not take the top spot. Instead Loess boosted by three repetitive Random Forests was the best performer with an average MSE of 143.51, while LightGBM ended with an average of 182.67. I believe this is because the dataset is small enough (1048 entries) that when it was split for training and testing, and further during KFold validation, it became much too small for LightGBM, which has an overfitting probelem for small datasets.</p>
-<p>It seems that the best combinations had Loess regressors, with either Random Forest or Decision tree boosters. The random forest regressor didn’t work well even with a decision tree booster, and the loess/loess pair failed as well. To continue this work, more random states and more data would be the first thing needed, but also more regressors could be tried. I could include Neural netowrks, possibly as boosters, and try more combinations with longer run times. Below is the MSE Score per fold for each model.</p>
-<p><img src="https://michaelcusacknelkin.github.io/Adv_Applied_Machine_Learning/Projects/Data/Proj4_Plot.png" alt="MSE Score per K Fold for Concrete Compressive Strength"></p>
+
+<ul>
+<li>The Cross-validated Mean Squared Error for LWR with Decision Tree is: 143.012</li>
+<li>The Cross-validated Mean Squared Error for LWR with Random Forest is: 140.36</li>
+<li>The Cross-validated Mean Squared Error for Random Forest with Decision Tree is: 181.19</li>
+<li>The Cross-validated Mean Squared Error for LWR with LWR: 199.80</li>
+<li>The Cross-validated Mean Squared Error for LightGBM: 142.94</li>
+</ul>
+Below is the MSE Score per fold for each model.</p>
+<p><img src="https://michaelcusacknelkin.github.io/WM_DATA410/Projects/Data/Proj4_Plot.png"
+    alt="MSE Score per K Fold for Concrete Compressive Strength"></p>
+
+<p>Surprisingly, LightGBM did not take the top spot. Instead LOESS boosted by three recursive Random Forests was the best performer with an average MSE of 140.36, while LightGBM ended with an average of 142.94. This is quite close though, and could be attributed to the size of the data set (only 1030 entries)LightGBM is known to have an overfitting probelem with small datasets.</p>
+<p>It seems that the best combinations had Loess regressors, with either Random Forest or Decision tree boosters. The random forest regressor didn't work well even with a decision tree booster, and the loess/loess pair failed as well. To continue this work, more random states and more data would be the first thing needed, but also more regressors could be tried. I could include Neural netowrks, possibly as boosters, and try more combinations with longer run times.
+
 </div>
 </body>
 
